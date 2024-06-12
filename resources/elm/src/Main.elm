@@ -1,7 +1,6 @@
 module Main exposing (main)
 
-import Browser.Events
-import Effect exposing (Effect)
+import Effect
 import Inertia
 import Interop
 import Json.Decode

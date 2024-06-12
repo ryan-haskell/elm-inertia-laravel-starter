@@ -20,13 +20,10 @@ import Components.Icon
 import Effect exposing (Effect)
 import Html exposing (..)
 import Html.Attributes as Attr
-import Html.Events
 import Http
 import Json.Decode
 import Json.Encode
 import Shared
-import Svg
-import Svg.Attributes as SvgAttr
 import Url exposing (Url)
 
 

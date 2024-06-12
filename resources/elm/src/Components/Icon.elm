@@ -171,3 +171,30 @@ hamburgerMenu =
             ]
             []
         ]
+
+
+close : Svg msg
+close =
+    Svg.svg
+        [ SvgAttr.class "h-6 w-6"
+        , SvgAttr.stroke "currentColor"
+        , SvgAttr.fill "none"
+        , SvgAttr.viewBox "0 0 24 24"
+        ]
+        [ Svg.path
+            [ SvgAttr.class "hidden"
+            , SvgAttr.strokeLinecap "round"
+            , SvgAttr.strokeLinejoin "round"
+            , SvgAttr.strokeWidth "2"
+            , SvgAttr.d "M4 6h16M4 12h16M4 18h16"
+            ]
+            []
+        , Svg.path
+            [ SvgAttr.class "inline-flex"
+            , SvgAttr.strokeLinecap "round"
+            , SvgAttr.strokeLinejoin "round"
+            , SvgAttr.strokeWidth "2"
+            , SvgAttr.d "M6 18L18 6M6 6l12 12"
+            ]
+            []
+        ]
