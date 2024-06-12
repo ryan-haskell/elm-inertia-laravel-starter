@@ -32,13 +32,21 @@ import Url exposing (Url)
 
 type alias Props =
     { auth : Shared.Auth.Auth
+    , laravelVersion : String
+    , phpVersion : String
+    , canLogin : Bool
+    , canRegister : Bool
     }
 
 
 decoder : Json.Decode.Decoder Props
 decoder =
-    Json.Decode.map Props
+    Json.Decode.map5 Props
         (Json.Decode.field "auth" Shared.Auth.decoder)
+        (Json.Decode.field "laravelVersion" Json.Decode.string)
+        (Json.Decode.field "phpVersion" Json.Decode.string)
+        (Json.Decode.field "canLogin" Json.Decode.bool)
+        (Json.Decode.field "canRegister" Json.Decode.bool)
 
 
 
@@ -87,7 +95,7 @@ subscriptions shared url props model =
 
 view : Shared.Model -> Url -> Props -> Model -> Browser.Document Msg
 view shared url props model =
-    { title = "Welcome"
+    { title = "Welcome - Laravel"
     , body =
         [ div
             [ Attr.class "bg-gray-50 text-black/50 dark:bg-black dark:text-white/50" ]
@@ -99,19 +107,26 @@ view shared url props model =
                         [ div [ Attr.class "flex lg:justify-center lg:col-start-2" ]
                             [ Components.Icon.laravelRed
                             ]
-                        , case props.auth.user of
-                            Just user ->
-                                nav
-                                    [ Attr.class "-mx-3 flex flex-1 justify-end" ]
-                                    [ viewLink { label = "Dashboard", url = "/dashboard" }
-                                    ]
+                        , if props.auth.user == Nothing then
+                            nav
+                                [ Attr.class "-mx-3 flex flex-1 justify-end" ]
+                                [ if props.canLogin then
+                                    viewLink { label = "Login", url = "/login" }
 
-                            Nothing ->
-                                nav
-                                    [ Attr.class "-mx-3 flex flex-1 justify-end" ]
-                                    [ viewLink { label = "Login", url = "/login" }
-                                    , viewLink { label = "Register", url = "/register" }
-                                    ]
+                                  else
+                                    text ""
+                                , if props.canRegister then
+                                    viewLink { label = "Register", url = "/register" }
+
+                                  else
+                                    text ""
+                                ]
+
+                          else
+                            nav
+                                [ Attr.class "-mx-3 flex flex-1 justify-end" ]
+                                [ viewLink { label = "Dashboard", url = "/dashboard" }
+                                ]
                         ]
                     , main_
                         [ Attr.class "mt-6" ]
@@ -318,7 +333,11 @@ view shared url props model =
                         [ Attr.class
                             "py-16 text-center text-sm text-black dark:text-white/70"
                         ]
-                        [ text "Laravel v11.10.0 (PHP v8.3.7)" ]
+                        [ "Laravel v${laravelVersion} (PHP v${phpVersion})"
+                            |> String.replace "${laravelVersion}" props.laravelVersion
+                            |> String.replace "${phpVersion}" props.phpVersion
+                            |> text
+                        ]
                     ]
                 ]
             ]

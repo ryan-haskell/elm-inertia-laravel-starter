@@ -8,6 +8,9 @@ import Effect exposing (Effect)
 import Html
 import Inertia exposing (PageObject)
 import Json.Decode exposing (Value)
+import Pages.Auth.ForgotPassword
+import Pages.Auth.Login
+import Pages.Auth.Register
 import Pages.Error404
 import Pages.Error500
 import Pages.Welcome
@@ -16,13 +19,19 @@ import Url exposing (Url)
 
 
 type Model
-    = Model_Welcome { props : Pages.Welcome.Props, model : Pages.Welcome.Model }
+    = Model_Auth_ForgotPassword { props : Pages.Auth.ForgotPassword.Props, model : Pages.Auth.ForgotPassword.Model }
+    | Model_Auth_Login { props : Pages.Auth.Login.Props, model : Pages.Auth.Login.Model }
+    | Model_Auth_Register { props : Pages.Auth.Register.Props, model : Pages.Auth.Register.Model }
+    | Model_Welcome { props : Pages.Welcome.Props, model : Pages.Welcome.Model }
     | Model_Error404 { model : Pages.Error404.Model }
     | Model_Error500 { info : Pages.Error500.Info, model : Pages.Error500.Model }
 
 
 type Msg
-    = Msg_Welcome Pages.Welcome.Msg
+    = Msg_Auth_ForgotPassword Pages.Auth.ForgotPassword.Msg
+    | Msg_Auth_Login Pages.Auth.Login.Msg
+    | Msg_Auth_Register Pages.Auth.Register.Msg
+    | Msg_Welcome Pages.Welcome.Msg
     | Msg_Error404 Pages.Error404.Msg
     | Msg_Error500 Pages.Error500.Msg
 
@@ -30,6 +39,30 @@ type Msg
 init : Shared.Model -> Url -> PageObject Value -> ( Model, Effect Msg )
 init shared url pageObject =
     case String.toLower pageObject.component of
+        "auth/forgotpassword" ->
+            initForPage shared url pageObject <|
+                { decoder = Pages.Auth.ForgotPassword.decoder
+                , init = Pages.Auth.ForgotPassword.init
+                , toModel = Model_Auth_ForgotPassword
+                , toMsg = Msg_Auth_ForgotPassword
+                }
+
+        "auth/login" ->
+            initForPage shared url pageObject <|
+                { decoder = Pages.Auth.Login.decoder
+                , init = Pages.Auth.Login.init
+                , toModel = Model_Auth_Login
+                , toMsg = Msg_Auth_Login
+                }
+
+        "auth/register" ->
+            initForPage shared url pageObject <|
+                { decoder = Pages.Auth.Register.decoder
+                , init = Pages.Auth.Register.init
+                , toModel = Model_Auth_Register
+                , toMsg = Msg_Auth_Register
+                }
+
         "welcome" ->
             initForPage shared url pageObject <|
                 { decoder = Pages.Welcome.decoder
@@ -51,6 +84,33 @@ init shared url pageObject =
 update : Shared.Model -> Url -> PageObject Value -> Msg -> Model -> ( Model, Effect Msg )
 update shared url pageObject msg model =
     case ( msg, model ) of
+        ( Msg_Auth_ForgotPassword pageMsg, Model_Auth_ForgotPassword page ) ->
+            let
+                ( pageModel, pageEffect ) =
+                    Pages.Auth.ForgotPassword.update shared url page.props pageMsg page.model
+            in
+            ( Model_Auth_ForgotPassword { page | model = pageModel }
+            , Effect.map Msg_Auth_ForgotPassword pageEffect
+            )
+
+        ( Msg_Auth_Login pageMsg, Model_Auth_Login page ) ->
+            let
+                ( pageModel, pageEffect ) =
+                    Pages.Auth.Login.update shared url page.props pageMsg page.model
+            in
+            ( Model_Auth_Login { page | model = pageModel }
+            , Effect.map Msg_Auth_Login pageEffect
+            )
+
+        ( Msg_Auth_Register pageMsg, Model_Auth_Register page ) ->
+            let
+                ( pageModel, pageEffect ) =
+                    Pages.Auth.Register.update shared url page.props pageMsg page.model
+            in
+            ( Model_Auth_Register { page | model = pageModel }
+            , Effect.map Msg_Auth_Register pageEffect
+            )
+
         ( Msg_Welcome pageMsg, Model_Welcome page ) ->
             let
                 ( pageModel, pageEffect ) =
@@ -85,6 +145,18 @@ update shared url pageObject msg model =
 subscriptions : Shared.Model -> Url -> PageObject Value -> Model -> Sub Msg
 subscriptions shared url pageObject model =
     case model of
+        Model_Auth_ForgotPassword page ->
+            Pages.Auth.ForgotPassword.subscriptions shared url page.props page.model
+                |> Sub.map Msg_Auth_ForgotPassword
+
+        Model_Auth_Login page ->
+            Pages.Auth.Login.subscriptions shared url page.props page.model
+                |> Sub.map Msg_Auth_Login
+
+        Model_Auth_Register page ->
+            Pages.Auth.Register.subscriptions shared url page.props page.model
+                |> Sub.map Msg_Auth_Register
+
         Model_Welcome page ->
             Pages.Welcome.subscriptions shared url page.props page.model
                 |> Sub.map Msg_Welcome
@@ -101,6 +173,18 @@ subscriptions shared url pageObject model =
 view : Shared.Model -> Url -> PageObject Value -> Model -> Document Msg
 view shared url pageObject model =
     case model of
+        Model_Auth_ForgotPassword page ->
+            Pages.Auth.ForgotPassword.view shared url page.props page.model
+                |> mapDocument Msg_Auth_ForgotPassword
+
+        Model_Auth_Login page ->
+            Pages.Auth.Login.view shared url page.props page.model
+                |> mapDocument Msg_Auth_Login
+
+        Model_Auth_Register page ->
+            Pages.Auth.Register.view shared url page.props page.model
+                |> mapDocument Msg_Auth_Register
+
         Model_Welcome page ->
             Pages.Welcome.view shared url page.props page.model
                 |> mapDocument Msg_Welcome
@@ -122,6 +206,30 @@ onPropsChanged :
     -> ( Model, Effect Msg )
 onPropsChanged shared url pageObject model =
     case model of
+        Model_Auth_ForgotPassword page ->
+            onPropsChangedForPage shared url pageObject page <|
+                { decoder = Pages.Auth.ForgotPassword.decoder
+                , onPropsChanged = Pages.Auth.ForgotPassword.onPropsChanged
+                , toModel = Model_Auth_ForgotPassword
+                , toMsg = Msg_Auth_ForgotPassword
+                }
+
+        Model_Auth_Login page ->
+            onPropsChangedForPage shared url pageObject page <|
+                { decoder = Pages.Auth.Login.decoder
+                , onPropsChanged = Pages.Auth.Login.onPropsChanged
+                , toModel = Model_Auth_Login
+                , toMsg = Msg_Auth_Login
+                }
+
+        Model_Auth_Register page ->
+            onPropsChangedForPage shared url pageObject page <|
+                { decoder = Pages.Auth.Register.decoder
+                , onPropsChanged = Pages.Auth.Register.onPropsChanged
+                , toModel = Model_Auth_Register
+                , toMsg = Msg_Auth_Register
+                }
+
         Model_Welcome page ->
             onPropsChangedForPage shared url pageObject page <|
                 { decoder = Pages.Welcome.decoder
