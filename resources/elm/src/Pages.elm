@@ -11,6 +11,7 @@ import Json.Decode exposing (Value)
 import Pages.Auth.ForgotPassword
 import Pages.Auth.Login
 import Pages.Auth.Register
+import Pages.Dashboard
 import Pages.Error404
 import Pages.Error500
 import Pages.Welcome
@@ -22,6 +23,7 @@ type Model
     = Model_Auth_ForgotPassword { props : Pages.Auth.ForgotPassword.Props, model : Pages.Auth.ForgotPassword.Model }
     | Model_Auth_Login { props : Pages.Auth.Login.Props, model : Pages.Auth.Login.Model }
     | Model_Auth_Register { props : Pages.Auth.Register.Props, model : Pages.Auth.Register.Model }
+    | Model_Dashboard { props : Pages.Dashboard.Props, model : Pages.Dashboard.Model }
     | Model_Welcome { props : Pages.Welcome.Props, model : Pages.Welcome.Model }
     | Model_Error404 { model : Pages.Error404.Model }
     | Model_Error500 { info : Pages.Error500.Info, model : Pages.Error500.Model }
@@ -31,6 +33,7 @@ type Msg
     = Msg_Auth_ForgotPassword Pages.Auth.ForgotPassword.Msg
     | Msg_Auth_Login Pages.Auth.Login.Msg
     | Msg_Auth_Register Pages.Auth.Register.Msg
+    | Msg_Dashboard Pages.Dashboard.Msg
     | Msg_Welcome Pages.Welcome.Msg
     | Msg_Error404 Pages.Error404.Msg
     | Msg_Error500 Pages.Error500.Msg
@@ -61,6 +64,14 @@ init shared url pageObject =
                 , init = Pages.Auth.Register.init
                 , toModel = Model_Auth_Register
                 , toMsg = Msg_Auth_Register
+                }
+
+        "dashboard" ->
+            initForPage shared url pageObject <|
+                { decoder = Pages.Dashboard.decoder
+                , init = Pages.Dashboard.init
+                , toModel = Model_Dashboard
+                , toMsg = Msg_Dashboard
                 }
 
         "welcome" ->
@@ -111,6 +122,15 @@ update shared url pageObject msg model =
             , Effect.map Msg_Auth_Register pageEffect
             )
 
+        ( Msg_Dashboard pageMsg, Model_Dashboard page ) ->
+            let
+                ( pageModel, pageEffect ) =
+                    Pages.Dashboard.update shared url page.props pageMsg page.model
+            in
+            ( Model_Dashboard { page | model = pageModel }
+            , Effect.map Msg_Dashboard pageEffect
+            )
+
         ( Msg_Welcome pageMsg, Model_Welcome page ) ->
             let
                 ( pageModel, pageEffect ) =
@@ -157,6 +177,10 @@ subscriptions shared url pageObject model =
             Pages.Auth.Register.subscriptions shared url page.props page.model
                 |> Sub.map Msg_Auth_Register
 
+        Model_Dashboard page ->
+            Pages.Dashboard.subscriptions shared url page.props page.model
+                |> Sub.map Msg_Dashboard
+
         Model_Welcome page ->
             Pages.Welcome.subscriptions shared url page.props page.model
                 |> Sub.map Msg_Welcome
@@ -184,6 +208,10 @@ view shared url pageObject model =
         Model_Auth_Register page ->
             Pages.Auth.Register.view shared url page.props page.model
                 |> mapDocument Msg_Auth_Register
+
+        Model_Dashboard page ->
+            Pages.Dashboard.view shared url page.props page.model
+                |> mapDocument Msg_Dashboard
 
         Model_Welcome page ->
             Pages.Welcome.view shared url page.props page.model
@@ -228,6 +256,14 @@ onPropsChanged shared url pageObject model =
                 , onPropsChanged = Pages.Auth.Register.onPropsChanged
                 , toModel = Model_Auth_Register
                 , toMsg = Msg_Auth_Register
+                }
+
+        Model_Dashboard page ->
+            onPropsChangedForPage shared url pageObject page <|
+                { decoder = Pages.Dashboard.decoder
+                , onPropsChanged = Pages.Dashboard.onPropsChanged
+                , toModel = Model_Dashboard
+                , toMsg = Msg_Dashboard
                 }
 
         Model_Welcome page ->
