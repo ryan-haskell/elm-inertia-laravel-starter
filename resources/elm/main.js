@@ -1,5 +1,13 @@
+import '../css/app.css';
 import { createInertiaApp } from 'elm-inertia'
 import Main from './src/Main.elm'
+
+
+if (import.meta.env.DEV) {
+  // For debugging only
+  let data = JSON.parse(document.getElementById('app').getAttribute('data-page'))
+  console.log(data)
+}
 
 // 1. Start the Elm application
 let app = createInertiaApp({
@@ -7,7 +15,7 @@ let app = createInertiaApp({
   init: Main.init,
   flags: {
     window: {
-      with: window.innerWidth,
+      width: window.innerWidth,
       height: window.innerHeight,
     }
   },

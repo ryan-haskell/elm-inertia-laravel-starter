@@ -11,7 +11,7 @@
         "@tailwindcss/forms": "^0.5.3",
         "autoprefixer": "^10.4.12",
         "concurrently": "8.2.2",
-        "elm-inertia": "1.0.4",
+        "elm-inertia": "1.0.5",
         "laravel-vite-plugin": "^1.0",
         "postcss": "^8.4.31",
         "tailwindcss": "^3.2.1",
