@@ -2,6 +2,8 @@
 
 Use Laravel and Elm together with Inertia.js!
 
+![A walkthrough of our Elm + Laravel app](./elm-laravel-starter-demo.gif)
+
 ### Local development
 
 Dependency | How to check
