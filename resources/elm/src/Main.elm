@@ -5,7 +5,9 @@ import Inertia
 import Interop
 import Json.Decode
 import Pages
+import Process
 import Shared
+import Task
 import Url exposing (Url)
 
 
@@ -61,3 +63,7 @@ fromCustomEffectToCmd context customEffect =
     case customEffect of
         Effect.ReportFlagsDecodeError error ->
             Interop.onFlagsDecodeError (Json.Decode.errorToString error)
+
+        Effect.SendMsgAfterDelay delay msg ->
+            Process.sleep delay
+                |> Task.perform (\_ -> msg)

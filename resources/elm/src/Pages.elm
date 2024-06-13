@@ -14,6 +14,7 @@ import Pages.Auth.Register
 import Pages.Dashboard
 import Pages.Error404
 import Pages.Error500
+import Pages.Profile.Edit
 import Pages.Welcome
 import Shared
 import Url exposing (Url)
@@ -24,6 +25,7 @@ type Model
     | Model_Auth_Login { props : Pages.Auth.Login.Props, model : Pages.Auth.Login.Model }
     | Model_Auth_Register { props : Pages.Auth.Register.Props, model : Pages.Auth.Register.Model }
     | Model_Dashboard { props : Pages.Dashboard.Props, model : Pages.Dashboard.Model }
+    | Model_Profile_Edit { props : Pages.Profile.Edit.Props, model : Pages.Profile.Edit.Model }
     | Model_Welcome { props : Pages.Welcome.Props, model : Pages.Welcome.Model }
     | Model_Error404 { model : Pages.Error404.Model }
     | Model_Error500 { info : Pages.Error500.Info, model : Pages.Error500.Model }
@@ -34,6 +36,7 @@ type Msg
     | Msg_Auth_Login Pages.Auth.Login.Msg
     | Msg_Auth_Register Pages.Auth.Register.Msg
     | Msg_Dashboard Pages.Dashboard.Msg
+    | Msg_Profile_Edit Pages.Profile.Edit.Msg
     | Msg_Welcome Pages.Welcome.Msg
     | Msg_Error404 Pages.Error404.Msg
     | Msg_Error500 Pages.Error500.Msg
@@ -72,6 +75,14 @@ init shared url pageObject =
                 , init = Pages.Dashboard.init
                 , toModel = Model_Dashboard
                 , toMsg = Msg_Dashboard
+                }
+
+        "profile/edit" ->
+            initForPage shared url pageObject <|
+                { decoder = Pages.Profile.Edit.decoder
+                , init = Pages.Profile.Edit.init
+                , toModel = Model_Profile_Edit
+                , toMsg = Msg_Profile_Edit
                 }
 
         "welcome" ->
@@ -131,6 +142,15 @@ update shared url pageObject msg model =
             , Effect.map Msg_Dashboard pageEffect
             )
 
+        ( Msg_Profile_Edit pageMsg, Model_Profile_Edit page ) ->
+            let
+                ( pageModel, pageEffect ) =
+                    Pages.Profile.Edit.update shared url page.props pageMsg page.model
+            in
+            ( Model_Profile_Edit { page | model = pageModel }
+            , Effect.map Msg_Profile_Edit pageEffect
+            )
+
         ( Msg_Welcome pageMsg, Model_Welcome page ) ->
             let
                 ( pageModel, pageEffect ) =
@@ -181,6 +201,10 @@ subscriptions shared url pageObject model =
             Pages.Dashboard.subscriptions shared url page.props page.model
                 |> Sub.map Msg_Dashboard
 
+        Model_Profile_Edit page ->
+            Pages.Profile.Edit.subscriptions shared url page.props page.model
+                |> Sub.map Msg_Profile_Edit
+
         Model_Welcome page ->
             Pages.Welcome.subscriptions shared url page.props page.model
                 |> Sub.map Msg_Welcome
@@ -212,6 +236,10 @@ view shared url pageObject model =
         Model_Dashboard page ->
             Pages.Dashboard.view shared url page.props page.model
                 |> mapDocument Msg_Dashboard
+
+        Model_Profile_Edit page ->
+            Pages.Profile.Edit.view shared url page.props page.model
+                |> mapDocument Msg_Profile_Edit
 
         Model_Welcome page ->
             Pages.Welcome.view shared url page.props page.model
@@ -264,6 +292,14 @@ onPropsChanged shared url pageObject model =
                 , onPropsChanged = Pages.Dashboard.onPropsChanged
                 , toModel = Model_Dashboard
                 , toMsg = Msg_Dashboard
+                }
+
+        Model_Profile_Edit page ->
+            onPropsChangedForPage shared url pageObject page <|
+                { decoder = Pages.Profile.Edit.decoder
+                , onPropsChanged = Pages.Profile.Edit.onPropsChanged
+                , toModel = Model_Profile_Edit
+                , toMsg = Msg_Profile_Edit
                 }
 
         Model_Welcome page ->

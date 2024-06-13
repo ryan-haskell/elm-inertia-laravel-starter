@@ -4,14 +4,14 @@ import Json.Decode
 
 
 type alias Auth =
-    { user : Maybe User
+    { user : User
     }
 
 
 decoder : Json.Decode.Decoder Auth
 decoder =
     Json.Decode.map Auth
-        (Json.Decode.field "user" (Json.Decode.maybe userDecoder))
+        (Json.Decode.field "user" userDecoder)
 
 
 type alias User =

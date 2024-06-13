@@ -1,32 +1,49 @@
-module Components.Form exposing (Field(..), view)
+module Components.Form exposing
+    ( Controls(..)
+    , Field(..)
+    , view
+    )
 
 import Html exposing (..)
 import Html.Attributes as Attr
 import Html.Events
 
 
+type Controls msg
+    = ControlsRight
+        { button : { label : String, onClick : msg }
+        , link : Maybe { label : String, url : String }
+        }
+    | ControlsLeft
+        { button :
+            { label : String
+            , onClick : msg
+            }
+        , message : Maybe String
+        }
+
+
 view :
-    { intro : Maybe String
-    , fields : List (Field msg)
-    , button : { label : String, onClick : msg }
-    , link : Maybe { label : String, url : String }
+    { fields : List (Field msg)
+    , controls : Controls msg
     }
     -> Html msg
 view props =
-    div [ Attr.class "w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg" ]
-        [ case props.intro of
-            Just message ->
-                div [ Attr.class "mb-4 text-sm text-gray-600" ] [ text message ]
+    let
+        onSubmit =
+            case props.controls of
+                ControlsLeft { button } ->
+                    button.onClick
 
-            Nothing ->
-                text ""
-        , Html.form [ Html.Events.onSubmit props.button.onClick ]
-            (List.concat
-                [ List.indexedMap viewField props.fields
-                , [ viewControls props ]
-                ]
-            )
-        ]
+                ControlsRight { button } ->
+                    button.onClick
+    in
+    Html.form [ Html.Events.onSubmit onSubmit ]
+        (List.concat
+            [ List.indexedMap viewField props.fields
+            , [ viewControls props.controls ]
+            ]
+        )
 
 
 type Field msg
@@ -137,13 +154,34 @@ viewCheckbox isFirstInputOnForm props =
         ]
 
 
-viewControls :
-    { props
-        | button : { label : String, onClick : msg }
-        , link : Maybe { label : String, url : String }
+viewControls : Controls msg -> Html msg
+viewControls controls =
+    case controls of
+        ControlsLeft props ->
+            div [ Attr.class "flex items-center gap-4 mt-4" ]
+                [ button
+                    [ Attr.class "inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                    , Attr.type_ "submit"
+                    ]
+                    [ text props.button.label ]
+                , case props.message of
+                    Just message ->
+                        p [ Attr.class "text-sm text-gray-600" ] [ text message ]
+
+                    Nothing ->
+                        text ""
+                ]
+
+        ControlsRight props ->
+            viewControlsRight props
+
+
+viewControlsRight :
+    { button : { label : String, onClick : msg }
+    , link : Maybe { label : String, url : String }
     }
     -> Html msg
-viewControls props =
+viewControlsRight props =
     div
         [ Attr.class "flex items-center justify-end mt-4" ]
         [ case props.link of

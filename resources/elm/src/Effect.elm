@@ -7,6 +7,7 @@ module Effect exposing
     , pushUrl, replaceUrl, back, forward
     , load, reload, reloadAndSkipCache
     , reportFlagsDecodeError
+    , sendMsgAfterDelay
     , map
     , CustomEffect(..)
     , mapCustomEffect
@@ -25,6 +26,7 @@ module Effect exposing
 @docs load, reload, reloadAndSkipCache
 
 @docs reportFlagsDecodeError
+@docs sendMsgAfterDelay
 
 @docs map
 
@@ -181,6 +183,11 @@ reportFlagsDecodeError error =
     Inertia.Effect.custom (ReportFlagsDecodeError error)
 
 
+sendMsgAfterDelay : { delayInMs : Float, msg : msg } -> Effect msg
+sendMsgAfterDelay props =
+    Inertia.Effect.custom (SendMsgAfterDelay props.delayInMs props.msg)
+
+
 
 -- TRANSFORMING EFFECTS
 
@@ -198,6 +205,7 @@ map fn =
 -}
 type CustomEffect msg
     = ReportFlagsDecodeError Json.Decode.Error
+    | SendMsgAfterDelay Float msg
 
 
 mapCustomEffect : (a -> b) -> CustomEffect a -> CustomEffect b
@@ -205,3 +213,6 @@ mapCustomEffect fn customEffect =
     case customEffect of
         ReportFlagsDecodeError error ->
             ReportFlagsDecodeError error
+
+        SendMsgAfterDelay delayInMs msg ->
+            SendMsgAfterDelay delayInMs (fn msg)

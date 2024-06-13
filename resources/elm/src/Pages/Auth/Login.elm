@@ -149,45 +149,49 @@ view shared url props model =
     , body =
         [ div [ Attr.class "min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100" ]
             [ a [ Attr.href "/" ] [ Components.Icon.laravelGrayscale ]
-            , Components.Form.view
-                { intro = Nothing
-                , fields =
-                    [ Components.Form.EmailInput
-                        { id = "email"
-                        , label = "Email"
-                        , value = model.email
-                        , onInput = EmailChanged
-                        , required = True
-                        , error = props.errors.email
-                        }
-                    , Components.Form.PasswordInput
-                        { id = "password"
-                        , label = "Password"
-                        , value = model.password
-                        , onInput = PasswordChanged
-                        , required = True
-                        , error = props.errors.password
-                        }
-                    , Components.Form.Checkbox
-                        { label = "Remember me"
-                        , value = model.remember
-                        , onInput = RememberMeChanged
-                        }
-                    ]
-                , button =
-                    { label = "Log in"
-                    , onClick = FormSubmitted
-                    }
-                , link =
-                    if props.canResetPassword then
-                        Just
-                            { label = "Forgot your password?"
-                            , url = "/forgot-password"
+            , div [ Attr.class "w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg" ]
+                [ Components.Form.view
+                    { fields =
+                        [ Components.Form.EmailInput
+                            { id = "email"
+                            , label = "Email"
+                            , value = model.email
+                            , onInput = EmailChanged
+                            , required = True
+                            , error = props.errors.email
                             }
+                        , Components.Form.PasswordInput
+                            { id = "password"
+                            , label = "Password"
+                            , value = model.password
+                            , onInput = PasswordChanged
+                            , required = True
+                            , error = props.errors.password
+                            }
+                        , Components.Form.Checkbox
+                            { label = "Remember me"
+                            , value = model.remember
+                            , onInput = RememberMeChanged
+                            }
+                        ]
+                    , controls =
+                        Components.Form.ControlsRight
+                            { button =
+                                { label = "Log in"
+                                , onClick = FormSubmitted
+                                }
+                            , link =
+                                if props.canResetPassword then
+                                    Just
+                                        { label = "Forgot your password?"
+                                        , url = "/forgot-password"
+                                        }
 
-                    else
-                        Nothing
-                }
+                                else
+                                    Nothing
+                            }
+                    }
+                ]
             ]
         ]
     }

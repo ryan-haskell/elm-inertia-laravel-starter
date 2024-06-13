@@ -31,7 +31,7 @@ import Url exposing (Url)
 
 
 type alias Props =
-    { auth : Shared.Auth.Auth
+    { isSignedIn : Bool
     , laravelVersion : String
     , phpVersion : String
     , canLogin : Bool
@@ -42,7 +42,11 @@ type alias Props =
 decoder : Json.Decode.Decoder Props
 decoder =
     Json.Decode.map5 Props
-        (Json.Decode.field "auth" Shared.Auth.decoder)
+        (Json.Decode.oneOf
+            [ Json.Decode.at [ "auth", "user" ] (Json.Decode.null False)
+            , Json.Decode.succeed True
+            ]
+        )
         (Json.Decode.field "laravelVersion" Json.Decode.string)
         (Json.Decode.field "phpVersion" Json.Decode.string)
         (Json.Decode.field "canLogin" Json.Decode.bool)
@@ -107,7 +111,13 @@ view shared url props model =
                         [ div [ Attr.class "flex lg:justify-center lg:col-start-2" ]
                             [ Components.Icon.laravelRed
                             ]
-                        , if props.auth.user == Nothing then
+                        , if props.isSignedIn then
+                            nav
+                                [ Attr.class "-mx-3 flex flex-1 justify-end" ]
+                                [ viewLink { label = "Dashboard", url = "/dashboard" }
+                                ]
+
+                          else
                             nav
                                 [ Attr.class "-mx-3 flex flex-1 justify-end" ]
                                 [ if props.canLogin then
@@ -120,12 +130,6 @@ view shared url props model =
 
                                   else
                                     text ""
-                                ]
-
-                          else
-                            nav
-                                [ Attr.class "-mx-3 flex flex-1 justify-end" ]
-                                [ viewLink { label = "Dashboard", url = "/dashboard" }
                                 ]
                         ]
                     , main_
