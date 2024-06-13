@@ -101,8 +101,7 @@ view : Shared.Model -> Url -> Props -> Model -> Browser.Document Msg
 view shared url props model =
     { title = "Welcome - Laravel"
     , body =
-        [ div
-            [ Attr.class "bg-gray-50 text-black/50 dark:bg-black dark:text-white/50" ]
+        [ div [ Attr.class "bg-gray-50 text-black/50 dark:bg-black dark:text-white/50" ]
             [ viewLaravelLogo
             , div [ Attr.class "relative min-h-screen flex flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white" ]
                 [ div [ Attr.class "relative w-full max-w-2xl px-6 lg:max-w-7xl" ]

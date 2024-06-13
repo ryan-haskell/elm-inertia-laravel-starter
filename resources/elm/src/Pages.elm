@@ -11,6 +11,7 @@ import Json.Decode exposing (Value)
 import Pages.Auth.ForgotPassword
 import Pages.Auth.Login
 import Pages.Auth.Register
+import Pages.Auth.ResetPassword
 import Pages.Dashboard
 import Pages.Error404
 import Pages.Error500
@@ -24,6 +25,7 @@ type Model
     = Model_Auth_ForgotPassword { props : Pages.Auth.ForgotPassword.Props, model : Pages.Auth.ForgotPassword.Model }
     | Model_Auth_Login { props : Pages.Auth.Login.Props, model : Pages.Auth.Login.Model }
     | Model_Auth_Register { props : Pages.Auth.Register.Props, model : Pages.Auth.Register.Model }
+    | Model_Auth_ResetPassword { props : Pages.Auth.ResetPassword.Props, model : Pages.Auth.ResetPassword.Model }
     | Model_Dashboard { props : Pages.Dashboard.Props, model : Pages.Dashboard.Model }
     | Model_Profile_Edit { props : Pages.Profile.Edit.Props, model : Pages.Profile.Edit.Model }
     | Model_Welcome { props : Pages.Welcome.Props, model : Pages.Welcome.Model }
@@ -35,6 +37,7 @@ type Msg
     = Msg_Auth_ForgotPassword Pages.Auth.ForgotPassword.Msg
     | Msg_Auth_Login Pages.Auth.Login.Msg
     | Msg_Auth_Register Pages.Auth.Register.Msg
+    | Msg_Auth_ResetPassword Pages.Auth.ResetPassword.Msg
     | Msg_Dashboard Pages.Dashboard.Msg
     | Msg_Profile_Edit Pages.Profile.Edit.Msg
     | Msg_Welcome Pages.Welcome.Msg
@@ -67,6 +70,14 @@ init shared url pageObject =
                 , init = Pages.Auth.Register.init
                 , toModel = Model_Auth_Register
                 , toMsg = Msg_Auth_Register
+                }
+
+        "auth/resetpassword" ->
+            initForPage shared url pageObject <|
+                { decoder = Pages.Auth.ResetPassword.decoder
+                , init = Pages.Auth.ResetPassword.init
+                , toModel = Model_Auth_ResetPassword
+                , toMsg = Msg_Auth_ResetPassword
                 }
 
         "dashboard" ->
@@ -133,6 +144,15 @@ update shared url pageObject msg model =
             , Effect.map Msg_Auth_Register pageEffect
             )
 
+        ( Msg_Auth_ResetPassword pageMsg, Model_Auth_ResetPassword page ) ->
+            let
+                ( pageModel, pageEffect ) =
+                    Pages.Auth.ResetPassword.update shared url page.props pageMsg page.model
+            in
+            ( Model_Auth_ResetPassword { page | model = pageModel }
+            , Effect.map Msg_Auth_ResetPassword pageEffect
+            )
+
         ( Msg_Dashboard pageMsg, Model_Dashboard page ) ->
             let
                 ( pageModel, pageEffect ) =
@@ -197,6 +217,10 @@ subscriptions shared url pageObject model =
             Pages.Auth.Register.subscriptions shared url page.props page.model
                 |> Sub.map Msg_Auth_Register
 
+        Model_Auth_ResetPassword page ->
+            Pages.Auth.ResetPassword.subscriptions shared url page.props page.model
+                |> Sub.map Msg_Auth_ResetPassword
+
         Model_Dashboard page ->
             Pages.Dashboard.subscriptions shared url page.props page.model
                 |> Sub.map Msg_Dashboard
@@ -232,6 +256,10 @@ view shared url pageObject model =
         Model_Auth_Register page ->
             Pages.Auth.Register.view shared url page.props page.model
                 |> mapDocument Msg_Auth_Register
+
+        Model_Auth_ResetPassword page ->
+            Pages.Auth.ResetPassword.view shared url page.props page.model
+                |> mapDocument Msg_Auth_ResetPassword
 
         Model_Dashboard page ->
             Pages.Dashboard.view shared url page.props page.model
@@ -284,6 +312,14 @@ onPropsChanged shared url pageObject model =
                 , onPropsChanged = Pages.Auth.Register.onPropsChanged
                 , toModel = Model_Auth_Register
                 , toMsg = Msg_Auth_Register
+                }
+
+        Model_Auth_ResetPassword page ->
+            onPropsChangedForPage shared url pageObject page <|
+                { decoder = Pages.Auth.ResetPassword.decoder
+                , onPropsChanged = Pages.Auth.ResetPassword.onPropsChanged
+                , toModel = Model_Auth_ResetPassword
+                , toMsg = Msg_Auth_ResetPassword
                 }
 
         Model_Dashboard page ->
