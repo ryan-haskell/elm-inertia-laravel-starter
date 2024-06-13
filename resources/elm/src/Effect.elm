@@ -4,6 +4,7 @@ module Effect exposing
     , sendMsg
     , get, post, put, patch, delete
     , request
+    , deleteWithBody
     , pushUrl, replaceUrl, back, forward
     , load, reload, reloadAndSkipCache
     , reportFlagsDecodeError
@@ -21,6 +22,7 @@ module Effect exposing
 
 @docs get, post, put, patch, delete
 @docs request
+@docs deleteWithBody
 
 @docs pushUrl, replaceUrl, back, forward
 @docs load, reload, reloadAndSkipCache
@@ -118,6 +120,26 @@ delete :
     -> Effect msg
 delete =
     Inertia.Effect.delete
+
+
+deleteWithBody :
+    { url : String
+    , decoder : Json.Decode.Decoder props
+    , body : Http.Body
+    , onResponse : Result Http.Error props -> msg
+    }
+    -> Effect msg
+deleteWithBody props =
+    Inertia.Effect.request
+        { method = "DELETE"
+        , url = props.url
+        , body = props.body
+        , headers = []
+        , decoder = props.decoder |> Json.Decode.map (Ok >> props.onResponse)
+        , onFailure = Err >> props.onResponse
+        , tracker = Nothing
+        , timeout = Nothing
+        }
 
 
 request :

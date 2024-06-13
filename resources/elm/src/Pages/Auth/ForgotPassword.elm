@@ -33,13 +33,15 @@ import Url exposing (Url)
 
 type alias Props =
     { errors : Errors
+    , status : Maybe String
     }
 
 
 decoder : Json.Decode.Decoder Props
 decoder =
-    Json.Decode.map Props
+    Json.Decode.map2 Props
         (Json.Decode.field "errors" errorsDecoder)
+        (Json.Decode.field "status" (Json.Decode.maybe Json.Decode.string))
 
 
 type alias Errors =
@@ -135,6 +137,12 @@ view shared url props model =
                 [ div [ Attr.class "mb-4 text-sm text-gray-600" ]
                     [ text "Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one."
                     ]
+                , case props.status of
+                    Just status ->
+                        div [ Attr.class "mb-4 text-sm text-blue-600" ] [ text status ]
+
+                    Nothing ->
+                        text ""
                 , Components.Form.view
                     { autofocusFirstField = True
                     , fields =

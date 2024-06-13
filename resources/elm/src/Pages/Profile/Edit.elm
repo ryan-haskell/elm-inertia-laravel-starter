@@ -88,7 +88,10 @@ type alias Model =
     , password : String
     , passwordConfirmation : String
     , passwordStatus : Maybe String
+    , changePasswordError : Maybe String
     , isDeleteConfirmationOpen : Bool
+    , deleteUserPassword : String
+    , deleteUserPasswordError : Maybe String
     }
 
 
@@ -101,8 +104,11 @@ init shared url props =
       , currentPassword = ""
       , password = ""
       , passwordConfirmation = ""
+      , changePasswordError = Nothing
       , passwordStatus = Nothing
       , isDeleteConfirmationOpen = False
+      , deleteUserPassword = ""
+      , deleteUserPasswordError = Nothing
       }
     , Effect.none
     )
@@ -119,19 +125,24 @@ onPropsChanged shared url props model =
 
 type Msg
     = Layout Layouts.Navbar.Msg
+      -- Profile info feature
     | ChangedName String
     | ChangedEmail String
     | ClickedSaveProfileInfo
-    | ProfileInfoSaved (Result Http.Error ())
+    | ProfileInfoSaved (Result Http.Error Props)
     | HideSavedMessage
+      -- Change password feature
     | ChangedCurrentPassword String
     | ChangedPassword String
     | ChangedPasswordConfirmation String
     | ClickedChangePassword
     | NewPasswordSaved (Result Http.Error Props)
+      -- Delete user feature
     | ClickedDeleteUser
-    | DeleteUserResponded (Result Http.Error ())
     | ClickedDeleteModalBackground
+    | ChangedDeleteUserPassword String
+    | ClickedConfirmDeleteUser
+    | DeleteUserResponded (Result Http.Error Props)
 
 
 update : Shared.Model -> Url -> Props -> Msg -> Model -> ( Model, Effect Msg )
@@ -164,12 +175,12 @@ update shared url props msg model =
             , Effect.patch
                 { url = "/profile"
                 , body = Http.jsonBody form
-                , decoder = Json.Decode.succeed ()
+                , decoder = decoder
                 , onResponse = ProfileInfoSaved
                 }
             )
 
-        ProfileInfoSaved (Ok ()) ->
+        ProfileInfoSaved (Ok newProps) ->
             ( { model | infoStatus = Just "Saved." }
             , Effect.sendMsgAfterDelay
                 { delayInMs = 3000
@@ -208,7 +219,7 @@ update shared url props msg model =
                         , ( "password_confirmation", Json.Encode.string model.passwordConfirmation )
                         ]
             in
-            ( model
+            ( { model | changePasswordError = Nothing }
             , Effect.put
                 { url = "/password"
                 , body = Http.jsonBody form
@@ -219,7 +230,7 @@ update shared url props msg model =
 
         NewPasswordSaved (Ok newProps) ->
             if hasAnyErrors newProps.errors then
-                ( model
+                ( { model | changePasswordError = newProps.errors.password }
                 , Effect.none
                 )
 
@@ -250,8 +261,30 @@ update shared url props msg model =
             , Effect.none
             )
 
-        DeleteUserResponded (Ok ()) ->
-            ( model, Effect.none )
+        ChangedDeleteUserPassword value ->
+            ( { model | deleteUserPassword = value }, Effect.none )
+
+        ClickedConfirmDeleteUser ->
+            let
+                form : Json.Encode.Value
+                form =
+                    Json.Encode.object
+                        [ ( "password", Json.Encode.string model.deleteUserPassword )
+                        ]
+            in
+            ( { model | deleteUserPasswordError = Nothing }
+            , Effect.deleteWithBody
+                { url = "/profile"
+                , body = Http.jsonBody form
+                , decoder = decoder
+                , onResponse = DeleteUserResponded
+                }
+            )
+
+        DeleteUserResponded (Ok newProps) ->
+            ( { model | deleteUserPasswordError = newProps.errors.password }
+            , Effect.none
+            )
 
         DeleteUserResponded (Err httpError) ->
             -- TODO: Communicate HTTP error
@@ -290,10 +323,9 @@ viewMainContent props model =
                 , div [ Attr.class "my-4" ] []
                 , viewPasswordChangeForm props model
                 , div [ Attr.class "my-4" ] []
-
-                -- , viewDeleteForm model
+                , viewDeleteForm model
                 , if model.isDeleteConfirmationOpen then
-                    viewDeleteConfirmationDialog
+                    viewDeleteConfirmationDialog props model
 
                   else
                     text ""
@@ -353,7 +385,7 @@ viewPasswordChangeForm props model =
                 , value = model.password
                 , onInput = ChangedPassword
                 , required = True
-                , error = props.errors.password
+                , error = model.changePasswordError
                 }
             , Components.Form.PasswordInput
                 { id = "password_confirmation"
@@ -413,8 +445,8 @@ viewForm props =
         ]
 
 
-viewDeleteConfirmationDialog : Html Msg
-viewDeleteConfirmationDialog =
+viewDeleteConfirmationDialog : Props -> Model -> Html Msg
+viewDeleteConfirmationDialog props model =
     div
         [ Attr.class "fixed inset-0 overflow-y-auto px-4 py-6 sm:px-0 z-50"
         , Attr.id "scroll-region"
@@ -422,38 +454,28 @@ viewDeleteConfirmationDialog =
         [ div [ Attr.class "fixed inset-0 transform transition-all", Html.Events.onClick ClickedDeleteModalBackground ]
             [ div [ Attr.class "absolute inset-0 bg-gray-500 opacity-75" ] []
             ]
-        , div [ Attr.class "mb-6 bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:mx-auto sm:max-w-2xl" ]
-            [ div
-                [ Attr.class "p-6" ]
-                [ h2 [ Attr.class "text-lg font-medium text-gray-900" ]
-                    [ text "Are you sure you want to delete your account?" ]
-                , p [ Attr.class "mt-1 text-sm text-gray-600" ]
-                    [ text "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account."
+        , div [ Attr.class "mb-6 bg-white p-6 rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full sm:mx-auto sm:max-w-2xl" ]
+            [ Components.Header.view
+                { title = "Are you sure you want to delete your account?"
+                , subtitle = "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account."
+                }
+            , Components.Form.view
+                { autofocusFirstField = False
+                , fields =
+                    [ Components.Form.PasswordInput
+                        { id = "delete_password"
+                        , label = "Password"
+                        , value = model.deleteUserPassword
+                        , onInput = ChangedDeleteUserPassword
+                        , required = True
+                        , error = model.deleteUserPasswordError
+                        }
                     ]
-                , div [ Attr.class "mt-6" ]
-                    [ label
-                        [ Attr.class "block font-medium text-sm text-gray-700 sr-only"
-                        , Attr.for "delete_password"
-                        ]
-                        [ span [] [ text "Password" ] ]
-                    , input
-                        [ Attr.class "border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-3/4"
-                        , Attr.id "delete_password"
-                        , Attr.type_ "password"
-                        , Attr.placeholder "Password"
-                        ]
-                        []
-                    ]
-                , div
-                    [ Attr.class "mt-6 flex justify-end" ]
-                    [ button
-                        [ Attr.type_ "button"
-                        , Attr.class "inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
-                        ]
-                        [ text "Cancel" ]
-                    , button [ Attr.class "inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150 ms-3" ]
-                        [ text "Delete Account" ]
-                    ]
-                ]
+                , controls =
+                    Components.Form.ControlsLeft
+                        { button = { label = "Delete user", onClick = ClickedConfirmDeleteUser }
+                        , message = Nothing
+                        }
+                }
             ]
         ]
