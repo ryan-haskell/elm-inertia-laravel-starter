@@ -402,7 +402,8 @@ viewForm props =
             , subtitle = props.subtitle
             }
         , Components.Form.view
-            { fields = props.fields
+            { autofocusFirstField = False
+            , fields = props.fields
             , controls =
                 Components.Form.ControlsLeft
                     { button = props.button

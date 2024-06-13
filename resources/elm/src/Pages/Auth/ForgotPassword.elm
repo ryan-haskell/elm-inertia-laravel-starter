@@ -15,11 +15,14 @@ module Pages.Auth.ForgotPassword exposing
 -}
 
 import Browser
+import Components.Form
+import Components.Icon
 import Effect exposing (Effect)
 import Html exposing (..)
 import Html.Attributes as Attr
-import Html.Events
+import Http
 import Json.Decode
+import Json.Encode
 import Shared
 import Url exposing (Url)
 
@@ -29,12 +32,25 @@ import Url exposing (Url)
 
 
 type alias Props =
-    {}
+    { errors : Errors
+    }
 
 
 decoder : Json.Decode.Decoder Props
 decoder =
-    Json.Decode.succeed {}
+    Json.Decode.map Props
+        (Json.Decode.field "errors" errorsDecoder)
+
+
+type alias Errors =
+    { email : Maybe String
+    }
+
+
+errorsDecoder : Json.Decode.Decoder Errors
+errorsDecoder =
+    Json.Decode.map Errors
+        (Json.Decode.maybe (Json.Decode.field "email" Json.Decode.string))
 
 
 
@@ -42,12 +58,14 @@ decoder =
 
 
 type alias Model =
-    {}
+    { email : String
+    }
 
 
 init : Shared.Model -> Url -> Props -> ( Model, Effect Msg )
 init shared url props =
-    ( {}
+    ( { email = ""
+      }
     , Effect.none
     )
 
@@ -62,13 +80,39 @@ onPropsChanged shared url props model =
 
 
 type Msg
-    = NoOp
+    = EmailChanged String
+    | FormSubmitted
+    | ApiResponded (Result Http.Error Props)
 
 
 update : Shared.Model -> Url -> Props -> Msg -> Model -> ( Model, Effect Msg )
 update shared url props msg model =
     case msg of
-        NoOp ->
+        EmailChanged value ->
+            ( { model | email = value }, Effect.none )
+
+        FormSubmitted ->
+            let
+                form : Json.Encode.Value
+                form =
+                    Json.Encode.object
+                        [ ( "email", Json.Encode.string model.email )
+                        ]
+            in
+            ( model
+            , Effect.post
+                { url = "/forgot-password"
+                , body = Http.jsonBody form
+                , decoder = decoder
+                , onResponse = ApiResponded
+                }
+            )
+
+        ApiResponded (Ok _) ->
+            ( model, Effect.none )
+
+        ApiResponded (Err httpError) ->
+            -- TODO: Handle HTTP errors
             ( model, Effect.none )
 
 
@@ -83,9 +127,36 @@ subscriptions shared url props model =
 
 view : Shared.Model -> Url -> Props -> Model -> Browser.Document Msg
 view shared url props model =
-    { title = "Auth.ForgotPassword"
+    { title = "Forgot Password - Laravel"
     , body =
-        [ h1 [] [ text "Auth.ForgotPassword" ]
-        , p [] [ text "This app is powered by elm-inertia!" ]
+        [ div [ Attr.class "min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100" ]
+            [ a [ Attr.href "/" ] [ Components.Icon.laravelGrayscale ]
+            , div [ Attr.class "w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg" ]
+                [ div [ Attr.class "mb-4 text-sm text-gray-600" ]
+                    [ text "Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one."
+                    ]
+                , Components.Form.view
+                    { autofocusFirstField = True
+                    , fields =
+                        [ Components.Form.EmailInput
+                            { id = "email"
+                            , label = "Email"
+                            , value = model.email
+                            , onInput = EmailChanged
+                            , required = True
+                            , error = props.errors.email
+                            }
+                        ]
+                    , controls =
+                        Components.Form.ControlsRight
+                            { button =
+                                { label = "Email password reset link"
+                                , onClick = FormSubmitted
+                                }
+                            , link = Nothing
+                            }
+                    }
+                ]
+            ]
         ]
     }

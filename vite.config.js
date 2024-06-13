@@ -8,6 +8,6 @@ export default defineConfig({
         input: 'resources/elm/main.js',
         refresh: true,
     }),
-    elm()
+    elm({ isBodyPatchEnabled: true })
   ]
 })

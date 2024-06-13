@@ -24,7 +24,8 @@ type Controls msg
 
 
 view :
-    { fields : List (Field msg)
+    { autofocusFirstField : Bool
+    , fields : List (Field msg)
     , controls : Controls msg
     }
     -> Html msg
@@ -40,7 +41,7 @@ view props =
     in
     Html.form [ Html.Events.onSubmit onSubmit ]
         (List.concat
-            [ List.indexedMap viewField props.fields
+            [ List.indexedMap (viewField props.autofocusFirstField) props.fields
             , [ viewControls props.controls ]
             ]
         )
@@ -78,24 +79,35 @@ type Field msg
         }
 
 
-viewField : Int -> Field msg -> Html msg
-viewField index field =
+viewField : Bool -> Int -> Field msg -> Html msg
+viewField autofocusFirstField index field =
+    let
+        fieldProps : FieldProps
+        fieldProps =
+            { autofocusFirstField = autofocusFirstField, isFirstInputOnForm = index == 0 }
+    in
     case field of
         TextInput props ->
-            viewInput (index == 0) "text" props
+            viewInput fieldProps "text" props
 
         EmailInput props ->
-            viewInput (index == 0) "email" props
+            viewInput fieldProps "email" props
 
         PasswordInput props ->
-            viewInput (index == 0) "password" props
+            viewInput fieldProps "password" props
 
         Checkbox props ->
-            viewCheckbox (index == 0) props
+            viewCheckbox fieldProps props
+
+
+type alias FieldProps =
+    { autofocusFirstField : Bool
+    , isFirstInputOnForm : Bool
+    }
 
 
 viewInput :
-    Bool
+    FieldProps
     -> String
     ->
         { id : String
@@ -106,8 +118,8 @@ viewInput :
         , error : Maybe String
         }
     -> Html msg
-viewInput isFirstInputOnForm inputType props =
-    div [ Attr.classList [ ( "mt-4", not isFirstInputOnForm ) ] ]
+viewInput field inputType props =
+    div [ Attr.classList [ ( "mt-4", not field.isFirstInputOnForm ) ] ]
         [ label
             [ Attr.class "block font-medium text-sm text-gray-700"
             , Attr.for props.id
@@ -115,14 +127,13 @@ viewInput isFirstInputOnForm inputType props =
             [ span [] [ text props.label ] ]
         , input
             [ Attr.class "border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full"
-            , Attr.classList [ ( "border-red-300", props.error /= Nothing ) ]
             , Attr.id props.id
             , Attr.type_ inputType
             , Attr.autocomplete False
             , Attr.value props.value
             , Html.Events.onInput props.onInput
             , Attr.required props.required
-            , Attr.autofocus isFirstInputOnForm
+            , Attr.autofocus (field.autofocusFirstField && field.isFirstInputOnForm)
             ]
             []
         , viewError props.error
@@ -130,14 +141,14 @@ viewInput isFirstInputOnForm inputType props =
 
 
 viewCheckbox :
-    Bool
+    FieldProps
     ->
         { label : String
         , value : Bool
         , onInput : Bool -> msg
         }
     -> Html msg
-viewCheckbox isFirstInputOnForm props =
+viewCheckbox { isFirstInputOnForm } props =
     div [ Attr.classList [ ( "mt-4", not isFirstInputOnForm ) ] ]
         [ label [ Attr.class "flex items-center" ]
             [ input

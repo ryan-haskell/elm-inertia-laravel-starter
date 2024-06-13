@@ -151,7 +151,8 @@ view shared url props model =
             [ a [ Attr.href "/" ] [ Components.Icon.laravelGrayscale ]
             , div [ Attr.class "w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg" ]
                 [ Components.Form.view
-                    { fields =
+                    { autofocusFirstField = True
+                    , fields =
                         [ Components.Form.EmailInput
                             { id = "email"
                             , label = "Email"
