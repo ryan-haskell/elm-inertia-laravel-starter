@@ -18,32 +18,3 @@ npm install
 # Run the server at http://localhost:8000
 npm run dev
 ```
-
-### Manual Steps
-
-```sh
-# Create a new project
-composer create-project laravel/laravel elm-inertia-laravel-starter
-
-# Install Laravel Breeze
-composer require laravel/breeze --dev
-
-# Set up frontend stack (chose Vue preset)
-php artisan breeze:install
-
-# (Added "php artisan serve" to the "package.json")
-
-# Installed Elm dependencies
-npm i -DE elm-inertia vite-plugin-elm-watch
-
-# Initialized elm-inertia (chose Laravel preset)
-npx elm-inertia init
-
-# Updated vite.config to include elm Vite plugin
-# Updated resources/views/app.blade.php to point to "elm/main.js"
-# Deleted resources/js
-# Removed vue dependencies
-
-# Ran the dev server
-npm run dev
-```
